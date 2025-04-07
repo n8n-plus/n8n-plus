@@ -1,4 +1,4 @@
-name: Sync Master with Upstream
+name: '[+] Sync Master with upstream'
 
 on:
   schedule:
@@ -7,10 +7,27 @@ on:
 
 jobs:
   sync:
+    name: Sync
     runs-on: ubuntu-latest
     steps:
-      - run: gh repo sync $REPOSITORY -b $BRANCH_NAME --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          REPOSITORY: ${{ github.repository }}
-          BRANCH_NAME: master
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote and fetch changes
+        run: |
+          git remote add upstream https://github.com/n8n-io/n8n.git
+          git fetch --unshallow upstream
+
+      - name: Sync local master with upstream
+        run: |
+          git checkout master
+          git reset --hard upstream/master
+          git push origin master --force
