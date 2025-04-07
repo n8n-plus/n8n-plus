@@ -2,14 +2,12 @@ name: End-to-End tests
 run-name: E2E Tests ${{ inputs.branch }} - ${{ inputs.user }}
 
 on:
-  schedule:
-    - cron: '0 3 * * *'
   workflow_dispatch:
     inputs:
       branch:
         description: 'GitHub branch to test.'
         required: false
-        default: 'master'
+        default: 'plus'
       spec:
         description: 'Specify specs.'
         required: false
