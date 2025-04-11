@@ -72,7 +72,7 @@ jobs:
       - name: Publish to NPM
         run: pnpm publish --filter n8n-plus --publish-branch ${{ github.event.pull_request.base.ref }} --access public --tag rc --no-git-checks
 
-      - name: Cleanup rc tag
+      - name: Update npm tags
         run: |
           npm dist-tag rm @n8n-plus/n8n-plus@${{ env.RELEASE }} rc
           npm dist-tag add @n8n-plus/n8n-plus@${{ env.RELEASE }} stable
@@ -159,7 +159,7 @@ jobs:
 
   sync-plus:
     name: Sync Plus
-    needs: [create-release]
+    needs: [publish-to-npm, create-release]
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
     timeout-minutes: 5
