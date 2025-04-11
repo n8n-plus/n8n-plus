@@ -1,8 +1,13 @@
 name: PR E2E
 
 on:
-  pull_request_review:
-    types: [submitted]
+  pull_request:
+    branches:
+      - 'release/*'
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 concurrency:
   group: e2e-${{ github.event.pull_request.number || github.ref }}-${{github.event.review.state}}
@@ -12,7 +17,6 @@ jobs:
   get-metadata:
     name: Get Metadata
     runs-on: ubuntu-latest
-    if: github.event.review.state == 'approved'
     steps:
       - name: Check out current commit
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -48,7 +52,7 @@ jobs:
     name: E2E [Electron/Node 18]
     uses: ./.github/workflows/e2e-reusable.yml
     needs: [get-metadata]
-    if: ${{ github.event.review.state == 'approved' && needs.get-metadata.outputs.should_run == 'true' }}
+    if: ${{ needs.get-metadata.outputs.should_run == 'true' }}
     with:
       pr_number: ${{ github.event.pull_request.number }}
       user: ${{ github.event.pull_request.user.login || 'PR User' }}
