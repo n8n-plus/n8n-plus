@@ -1,3 +1,41 @@
+## [1.85.4](https://github.com/n8n-io/n8n/compare/n8n@1.85.3...n8n@1.85.4) (2025-03-27)
+
+
+### Bug Fixes
+
+* **Basic LLM Chain Node:** Prevent stringifying of structured output on previous versions ([#14200](https://github.com/n8n-io/n8n/issues/14200)) ([e432aa6](https://github.com/n8n-io/n8n/commit/e432aa688e3b6d5e35741b0c6b5b4ba1d7374ff1))
+
+
+
+## [1.85.3](https://github.com/n8n-io/n8n/compare/n8n@1.85.2...n8n@1.85.3) (2025-03-26)
+
+
+### Bug Fixes
+
+* **Basic LLM Chain Node:** Prevent incorrect wrapping of output ([#14183](https://github.com/n8n-io/n8n/issues/14183)) ([5e786e8](https://github.com/n8n-io/n8n/commit/5e786e89cb94dfd9008c4db75e456d69f1365cc0))
+
+
+
+## [1.85.2](https://github.com/n8n-io/n8n/compare/n8n@1.85.1...n8n@1.85.2) (2025-03-25)
+
+
+### Bug Fixes
+
+* **editor:** Check for when to show the community+ modal for the folder's feature ([#14146](https://github.com/n8n-io/n8n/issues/14146)) ([39ac856](https://github.com/n8n-io/n8n/commit/39ac856924183de4d14cd4d4c5dc594b62a0036a))
+
+
+
+## [1.85.1](https://github.com/n8n-io/n8n/compare/n8n@1.85.0...n8n@1.85.1) (2025-03-25)
+
+
+### Bug Fixes
+
+* **API:** Fix import config import ([#14137](https://github.com/n8n-io/n8n/issues/14137)) ([b8adb63](https://github.com/n8n-io/n8n/commit/b8adb63fb804f20388f2beeb95a95e6cb3c03bab))
+* Correct connections in SentimentAnalysis and TextClassifier ([#14155](https://github.com/n8n-io/n8n/issues/14155)) ([b100f27](https://github.com/n8n-io/n8n/commit/b100f27358238c8f3e22038ba4c485a88e01856c))
+* **OpenAI Node:** Show correct inputs for AI node ([#14142](https://github.com/n8n-io/n8n/issues/14142)) ([2444169](https://github.com/n8n-io/n8n/commit/2444169001dd409dfb3d99d7ad23185981520dd6))
+
+
+
 # [1.85.0](https://github.com/n8n-io/n8n/compare/n8n@1.84.0...n8n@1.85.0) (2025-03-24)
 
 
