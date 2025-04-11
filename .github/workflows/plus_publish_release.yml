@@ -70,10 +70,13 @@ jobs:
           sed -i "s/default: 'dev'/default: 'stable'/g" packages/cli/dist/config/schema.js
 
       - name: Publish to NPM
-        run: pnpm publish --filter n8n-plus --publish-branch ${{ github.event.pull_request.head.ref }} --access public --tag rc --tag stable --no-git-checks
+        run: pnpm publish --filter n8n-plus --publish-branch ${{ github.event.pull_request.base.ref }} --access public --tag rc --no-git-checks
 
       - name: Cleanup rc tag
-        run: npm dist-tag rm n8n rc
+        run: |
+          npm dist-tag rm @n8n-plus/n8n-plus@${{ env.RELEASE }} rc
+          npm dist-tag add @n8n-plus/n8n-plus@${{ env.RELEASE }} stable
+          npm dist-tag add @n8n-plus/n8n-plus@${{ env.RELEASE }} latest
         continue-on-error: true
 
       - id: set-release
@@ -181,7 +184,7 @@ jobs:
             });
             core.setOutput("prExists", pulls.length > 0 ? "true" : "false");
         env:
-          BRANCH_TAG: ${{ github.event.pull_request.head.ref }}
+          BRANCH_TAG: ${{ github.event.pull_request.base.ref }}
 
       - name: Exit if PR already exists
         if: ${{ steps.check-pr.outputs.prExists == 'true' }}
@@ -216,6 +219,6 @@ jobs:
             }
         env:
           VERSION: ${{ needs.publish-to-npm.outputs.release }}
-          BRANCH_TAG: ${{ github.event.pull_request.head.ref }}
+          BRANCH_TAG: ${{ github.event.pull_request.base.ref }}
           PR_BODY: ${{ github.event.pull_request.body }}
 
