@@ -162,16 +162,16 @@ jobs:
         run: |
           BRANCH_TAG="${{ needs.check-pr.outputs.branch_tag }}"
           git push origin "release/${BRANCH_TAG}"
-          
+
       - name: Create plus-release branch
         run: |
           BRANCH_TAG="${{ needs.check-pr.outputs.branch_tag }}"
           # Checkout plus branch
           git checkout plus
-          # Create plus-release-{version} branch from plus
-          git checkout -b "plus-release-${BRANCH_TAG}"
+          # Create plus-for-release-{version} branch from plus
+          git checkout -b "plus-for-release-${BRANCH_TAG}"
           # Push the new branch to origin
-          git push origin "plus-release-${BRANCH_TAG}"
+          git push origin "plus-for-release-${BRANCH_TAG}"
 
       - name: Create PR using GitHub API
         uses: actions/github-script@v6
@@ -203,7 +203,7 @@ jobs:
                 repo,
                 title: `chore: 🔄 Sync release ${{ needs.check-pr.outputs.branch_tag }}`,
                 body: prBody,
-                head: `plus-release-${{ needs.check-pr.outputs.branch_tag }}`,
+                head: `plus-for-release-${{ needs.check-pr.outputs.branch_tag }}`,
                 base: `release/${{ needs.check-pr.outputs.branch_tag }}`,
               });
               console.log(`Pull request created: ${result.data.html_url}`);
