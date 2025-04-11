@@ -164,12 +164,6 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Set Branch Tag from PR Branch
-        id: set-tag
-        run: |
-          # Use the pull request branch name directly (e.g., "release/1.83.1")
-          echo "branch_tag=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
-
       - name: Check if PR to merge into plus exists
         id: check-pr
         uses: actions/github-script@v6
@@ -187,7 +181,7 @@ jobs:
             });
             core.setOutput("prExists", pulls.length > 0 ? "true" : "false");
         env:
-          BRANCH_TAG: ${{ steps.set-tag.outputs.branch_tag }}
+          BRANCH_TAG: ${{ github.event.pull_request.head.ref }}
 
       - name: Exit if PR already exists
         if: ${{ steps.check-pr.outputs.prExists == 'true' }}
@@ -195,22 +189,33 @@ jobs:
           echo "A PR merging release/${{ needs.publish-to-npm.outputs.release }} into plus already exists. Exiting."
           exit 0
 
-      - name: Create PR merging release branch into plus
+      - name: Create PR merging pull request branch into plus
         if: ${{ steps.check-pr.outputs.prExists == 'false' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const branchTag = process.env.BRANCH_TAG;
             const { owner, repo } = context.repo;
-            const result = await github.rest.pulls.create({
-              owner,
-              repo,
-              title: `Merge ${branchTag} into plus`,
-              body: ``,
-              head: branchTag,
-              base: 'plus'
-            });
-            console.log(`Pull request created: ${result.data.html_url}`);
+            try {
+              const prBody = process.env.PR_BODY || '';
+              const branchTag = process.env.BRANCH_TAG;
+              const version = process.env.VERSION;
+
+              const result = await github.rest.pulls.create({
+                owner,
+                repo,
+                title: `chore: ⤵️ Merge release ${version}`,
+                body: prBody,
+                head: branchTag,  // Source branch is the pull request branch
+                base: 'plus'      // Target branch is "plus"
+              });
+              console.log(`Pull request created: ${result.data.html_url}`);
+            } catch (error) {
+              console.error('Failed to create pull request:', error);
+              core.setFailed(`Failed to create pull request: ${error.message}`);
+            }
         env:
-          BRANCH_TAG: ${{ steps.set-tag.outputs.branch_tag }}
+          VERSION: ${{ needs.publish-to-npm.outputs.release }}
+          BRANCH_TAG: ${{ github.event.pull_request.head.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+
