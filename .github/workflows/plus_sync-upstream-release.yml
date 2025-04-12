@@ -19,6 +19,7 @@ jobs:
       raw_tag: ${{ steps.find_tag.outputs.raw_tag }}
       branch_tag: ${{ steps.normalize.outputs.branch_tag }}
       release_body: ${{ steps.find_tag.outputs.release_body }}
+      plus_tag_exists: ${{ steps.check_plus_tag.outputs.plus_tag_exists }}
     steps:
       - name: Check out (plus branch)
         uses: actions/checkout@v3
@@ -76,8 +77,24 @@ jobs:
           NORMALIZED_TAG=$(echo "$RAW_TAG" | sed 's/^n8n@//')
           echo "branch_tag=$NORMALIZED_TAG" >> $GITHUB_OUTPUT
 
+      - name: Check if n8n-plus tag exists
+        id: check_plus_tag
+        run: |
+          NORMALIZED_TAG="${{ steps.normalize.outputs.branch_tag }}"
+          PLUS_TAG="n8n-plus@${NORMALIZED_TAG}"
+          MATCH=$(git ls-remote --tags origin refs/tags/$PLUS_TAG)
+          if [ -n "$MATCH" ]; then
+            echo "plus_tag_exists=true" >> $GITHUB_OUTPUT
+            echo "Tag '$PLUS_TAG' already exists in origin."
+            echo "::notice ::Skipping remaining steps since n8n-plus tag already exists"
+          else
+            echo "plus_tag_exists=false" >> $GITHUB_OUTPUT
+            echo "Tag '$PLUS_TAG' does not exist in origin."
+          fi
+
       - name: Check if raw tag exists in upstream
         id: check_upstream
+        if: ${{ steps.check_plus_tag.outputs.plus_tag_exists != 'true' }}
         run: |
           RAW_TAG="${{ steps.find_tag.outputs.raw_tag }}"
           MATCH=$(git ls-remote --tags upstream refs/tags/$RAW_TAG)
@@ -91,6 +108,7 @@ jobs:
       # Check if there's already an open PR with base=release/<tag>, head=plus
       - name: Check if PR is already open
         id: check_existing_pr
+        if: ${{ steps.check_plus_tag.outputs.plus_tag_exists != 'true' }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -115,7 +133,7 @@ jobs:
   sync:
     name: Sync release branch
     needs: check-pr
-    if: ${{ needs.check-pr.outputs.pr_exists == 'false' }}
+    if: ${{ needs.check-pr.outputs.pr_exists == 'false' && needs.check-pr.outputs.plus_tag_exists == 'false' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

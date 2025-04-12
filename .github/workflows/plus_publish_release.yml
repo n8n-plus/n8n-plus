@@ -149,7 +149,7 @@ jobs:
       - name: Create a Release in the Fork
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ needs.publish-to-npm.outputs.release }}
+          tag_name: "n8n-plus@${{ needs.publish-to-npm.outputs.release }}"
           release_name: "n8n-plus@${{ needs.publish-to-npm.outputs.release }}"
           body: ${{ github.event.pull_request.body }}
           draft: false
