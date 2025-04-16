@@ -1,13 +1,13 @@
 import type { GlobalConfig } from '@n8n/config';
-import { LicenseManager } from '@n8n_io/license-sdk';
 import { mock } from 'jest-mock-extended';
 import type { InstanceSettings } from 'n8n-core';
 
 import { N8N_VERSION } from '@/constants';
 import { License } from '@/license';
+import { LicenseManager } from '@/license-manager';
 import { mockLogger } from '@test/mocking';
 
-jest.mock('@n8n_io/license-sdk');
+jest.mock('@/license-manager');
 
 const MOCK_SERVER_URL = 'https://server.com/v1';
 const MOCK_RENEW_OFFSET = 259200;
@@ -25,7 +25,7 @@ function makeDateWithHourOffset(offsetInHours: number): Date {
 const licenseConfig: GlobalConfig['license'] = {
 	serverUrl: MOCK_SERVER_URL,
 	autoRenewalEnabled: true,
-	autoRenewOffset: MOCK_RENEW_OFFSET,
+	detachFloatingOnShutdown: true,
 	activationKey: MOCK_ACTIVATION_KEY,
 	tenantId: 1,
 	cert: '',
@@ -138,6 +138,27 @@ describe('License', () => {
 		license.getManagementJwt();
 
 		expect(LicenseManager.prototype.getManagementJwt).toHaveBeenCalled();
+	});
+
+	test('check planName is correctly set to n8n+', () => {
+		// Unmock for this test to use the real implementation
+		jest.unmock('@/license-manager');
+		// Import the real LicenseManager
+		const { LicenseManager } = jest.requireActual('@/license-manager');
+
+		// Create a real instance
+		const realLicenseManager = new LicenseManager({
+			tenantId: 1,
+		});
+
+		// Get the actual planName from the real implementation
+		const planName = realLicenseManager.getFeatureValue('planName');
+
+		// Verify it's set to n8n+
+		expect(planName).toBe('n8n+');
+
+		// Re-mock for other tests
+		jest.mock('@/license-manager');
 	});
 
 	test('getMainPlan() returns the latest main entitlement', async () => {

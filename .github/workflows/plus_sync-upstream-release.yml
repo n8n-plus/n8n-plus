@@ -22,7 +22,7 @@ jobs:
       plus_tag_exists: ${{ steps.check_plus_tag.outputs.plus_tag_exists }}
     steps:
       - name: Check out (plus branch)
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           ref: plus
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
 
       - name: Determine raw target tag and original release content
         id: find_tag
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const INPUT_TAG = "${{ github.event.inputs.upstream_ref }}";
@@ -109,11 +109,11 @@ jobs:
       - name: Check if PR is already open
         id: check_existing_pr
         if: ${{ steps.check_plus_tag.outputs.plus_tag_exists != 'true' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const base = `release/${{ steps.normalize.outputs.branch_tag }}`;
-            const head = `plus`;
+            const head = `plus-for-release-${{ steps.normalize.outputs.branch_tag }}`;
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
             const { data: pulls } = await github.rest.pulls.list({
@@ -140,7 +140,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Check out (plus branch)
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           ref: plus
           token: ${{ secrets.PAT_TOKEN }} # Required with a content + pull_requests + workflows permission to push. Workflows permission is only available with PAT
@@ -192,7 +192,7 @@ jobs:
           git push origin "plus-for-release-${BRANCH_TAG}"
 
       - name: Create PR using GitHub API
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           github-token: ${{ secrets.PAT_TOKEN }} # Needed to trigger sub workflow on pull request creation
           script: |

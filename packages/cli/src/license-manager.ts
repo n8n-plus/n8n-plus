@@ -11,14 +11,14 @@ import { v4 } from 'uuid';
 
 import { LICENSE_FEATURES, LICENSE_QUOTAS } from '@/constants';
 
-const MANUALLY_DISABLED_FEATURES: string[] = [
-	LICENSE_FEATURES.API_DISABLED,
-	LICENSE_FEATURES.SHOW_NON_PROD_BANNER,
-];
-
 const UNLIMITED_LICENSE_QUOTA = -1;
 
 export class LicenseManager {
+	private MANUALLY_DISABLED_FEATURES: string[] = [
+		LICENSE_FEATURES.API_DISABLED,
+		LICENSE_FEATURES.SHOW_NON_PROD_BANNER,
+	];
+
 	private initialized = false;
 
 	private readonly licenseCert: TLicenseCertObj;
@@ -29,7 +29,7 @@ export class LicenseManager {
 		// Create features with all LICENSE_FEATURES enabled (except manually disabled ones)
 		this.currentFeatures = Object.values(LICENSE_FEATURES).reduce(
 			(features: TFeatures, feature: string) => {
-				features[feature] = !MANUALLY_DISABLED_FEATURES.includes(feature);
+				features[feature] = !this.MANUALLY_DISABLED_FEATURES.includes(feature);
 				return features;
 			},
 			{} as TFeatures,
@@ -175,15 +175,11 @@ export class LicenseManager {
 		return this.licenseCert.deviceFingerprint;
 	}
 
-	async activate(reservationId: string): Promise<void> {
+	async activate(_reservationId: string): Promise<void> {
 		// Do nothing
 	}
 
 	async renew(): Promise<void> {
-		// Do nothing
-	}
-
-	async _renew(options?: { detachFloatingEntitlements?: boolean; cause?: string }): Promise<void> {
 		// Do nothing
 	}
 
@@ -207,26 +203,15 @@ export class LicenseManager {
 		return farFuture;
 	}
 
-	isValid(useLogger?: boolean): boolean {
+	isValid(): boolean {
 		return true;
 	}
 
-	hasFeatureEnabled(feature: string, requireValidCert?: boolean): boolean {
+	hasFeatureEnabled(feature: string): boolean {
 		return this.currentFeatures[feature] === true;
 	}
 
-	hasFeatureDefined(feature: string, requireValidCert?: boolean): boolean {
-		return feature in this.currentFeatures;
-	}
-
-	hasQuotaLeft(quotaFeatureName: string, currentConsumption: number): boolean {
-		return true;
-	}
-
-	getFeatureValue(
-		feature: string,
-		requireValidCert?: boolean,
-	): boolean | number | string | undefined {
+	getFeatureValue(feature: string): boolean | number | string | undefined {
 		return this.currentFeatures[feature];
 	}
 
