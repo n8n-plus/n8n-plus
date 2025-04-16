@@ -78,8 +78,11 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 			throw error;
 		}
 
-		if (response.executionId !== undefined) {
-			workflowsStore.activeExecutionId = response.executionId;
+		if (
+			response.executionId !== undefined &&
+			workflowsStore.previousExecutionId !== response.executionId
+		) {
+			workflowsStore.setActiveExecutionId(response.executionId);
 		}
 
 		if (response.waitingForWebhook === true && useWorkflowsStore().nodesIssuesExist) {
@@ -182,7 +185,7 @@ export function useRunWorkflow(useRunWorkflowOpts: { router: ReturnType<typeof u
 					// and halt the execution
 					if (!chatHasInputData && !chatHasPinData) {
 						workflowsStore.chatPartialExecutionDestinationNode = options.destinationNode;
-						workflowsStore.setPanelState('attached');
+						workflowsStore.toggleLogsPanelOpen(true);
 						return;
 					}
 				}
