@@ -53,15 +53,6 @@ jobs:
     needs: [run-e2e-tests]
     if: ${{ github.event.inputs.success-url != '' }}
     steps:
-      - name: Notify Slack on failure
-        uses: act10ns/slack@ed1309ab9862e57e9e583e51c7889486b9a00b0f # v2.0.0
-        if: failure()
-        with:
-          status: ${{ job.status }}
-          channel: '#alerts-build'
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          message: E2E failure for branch `${{ inputs.branch || 'master' }}` deployed by ${{ inputs.user || 'schedule' }} (${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
       - name: Call Success URL - optionally
         run: |
           [[ "${{github.event.inputs.success-url}}" != "" ]] && curl -v ${{github.event.inputs.success-url}} || echo ""

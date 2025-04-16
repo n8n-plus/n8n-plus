@@ -110,7 +110,7 @@ jobs:
         run: pnpm cypress:install
 
   testing:
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     needs: ['prepare', 'install']
     strategy:
       fail-fast: false
