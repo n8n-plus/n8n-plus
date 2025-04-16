@@ -1,8 +1,8 @@
 ![n8n.io - Workflow Automation](https://user-images.githubusercontent.com/65276001/173571060-9f2f6d7b-bac0-43b6-bdb2-001da9694058.png)
 
-# n8n - Secure Workflow Automation for Technical Teams
+# n8n+ - Secure Workflow Automation for Technical Teams (plus edition)
 
-n8n is a workflow automation platform that gives technical teams the flexibility of code with the speed of no-code. With 400+ integrations, native AI capabilities, and a fair-code license, n8n lets you build powerful automations while maintaining full control over your data and deployments.
+n8n+ is a workflow automation platform that gives technical teams the flexibility of code with the speed of no-code. With 400+ integrations, native AI capabilities, and a fair-code license, n8n lets you build powerful automations while maintaining full control over your data and deployments.
 
 ![n8n.io - Screenshot](https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-screenshot-readme.png)
 
@@ -14,16 +14,33 @@ n8n is a workflow automation platform that gives technical teams the flexibility
 - **Enterprise-Ready**: Advanced permissions, SSO, and air-gapped deployments
 - **Active Community**: 400+ integrations and 900+ ready-to-use [templates](https://n8n.io/workflows)
 
+## Plus Edition Features
+
+- **Advanced Access Control**: Admin roles with fine-grained permissions
+- **Global Variables**: Share configurations across workflows
+- **Extended History**: Workflow history up to 5 days
+- **Enhanced Search**: Advanced execution search capabilities
+- **Unlimited Sharing**: Unlimited shared-projects for team collaboration
+- **High Performance**: 200+ concurrent executions support
+- **Enterprise Authentication**: SSO SAML and LDAP authentication
+- **Multi-Environment**: Isolated development, production and other environments
+- **External Secrets**: Integration with external secret stores
+- **Log Streaming**: Real-time log streaming for monitoring
+- **Git Integration**: Version control for your workflows
+- **Scalability**: Advanced scaling options for high-demand scenarios
+- **Unlimited Data**: Unlimited data retention
+
 ## Contents
 
-- [n8n - Workflow automation tool](#n8n---workflow-automation-tool)
+- [n8n+ - Secure Workflow Automation for Technical Teams (plus edition)](#n8n---secure-workflow-automation-for-technical-teams-plus-edition)
   - [Key Capabilities](#key-capabilities)
+  - [Plus Edition Features](#plus-edition-features)
   - [Contents](#contents)
   - [Demo](#demo)
   - [Available integrations](#available-integrations)
   - [Documentation](#documentation)
-  - [Start n8n in Docker](#start-n8n-in-docker)
-  - [Start n8n with tunnel](#start-n8n-with-tunnel)
+  - [Start n8n+ in Docker](#start-n8n-in-docker)
+  - [Start n8n+ with tunnel](#start-n8n-with-tunnel)
   - [Use with PostgreSQL](#use-with-postgresql)
   - [Passing sensitive data using files](#passing-sensitive-data-using-files)
   - [Example server setups](#example-server-setups)
@@ -36,8 +53,6 @@ n8n is a workflow automation platform that gives technical teams the flexibility
   - [Build Docker-Image](#build-docker-image)
   - [What does n8n mean and how do you pronounce it?](#what-does-n8n-mean-and-how-do-you-pronounce-it)
   - [Support](#support)
-  - [Jobs](#jobs)
-  - [License](#license)
 
 ## Demo
 
@@ -45,7 +60,7 @@ This [:tv: short video (< 4 min)](https://www.youtube.com/watch?v=RpjQTGKm-ok)  
 
 ## Available integrations
 
-n8n has 200+ different nodes to automate workflows. A full list can be found at [https://n8n.io/integrations](https://n8n.io/integrations).
+n8n+ has 400+ different nodes to automate workflows. A full list can be found at [https://n8n.io/integrations](https://n8n.io/integrations).
 
 ## Documentation
 
@@ -53,7 +68,7 @@ The official n8n documentation can be found at [https://docs.n8n.io](https://doc
 
 Additional information and example workflows are available on the website at [https://n8n.io](https://n8n.io).
 
-## Start n8n in Docker
+## Start n8n+ in Docker
 
 In the terminal, enter the following:
 
@@ -64,24 +79,24 @@ docker run -it --rm \
  --name n8n \
  -p 5678:5678 \
  -v n8n_data:/home/node/.n8n \
- docker.n8n.io/n8nio/n8n
+ ghcr.io/n8n-plus/n8n-plus
 ```
 
-This command will download the required n8n image and start your container.
-You can then access n8n by opening:
+This command will download the required n8n+ image and start your container.
+You can then access n8n+ by opening:
 [http://localhost:5678](http://localhost:5678)
 
 To save your work between container restarts, it also mounts a docker volume, `n8n_data`. The workflow data gets saved in an SQLite database in the user folder (`/home/node/.n8n`). This folder also contains important data like the webhook URL and the encryption key used for securing credentials.
 
 If this data can't be found at startup n8n automatically creates a new key and any existing credentials can no longer be decrypted.
 
-## Start n8n with tunnel
+## Start n8n+ with tunnel
 
 > **WARNING**: This is only meant for local development and testing and should **NOT** be used in production!
 
-n8n must be reachable from the internet to make use of webhooks - essential for triggering workflows from external web-based services such as GitHub. To make this easier, n8n has a special tunnel service which redirects requests from our servers to your local n8n instance. You can inspect the code running this service here: [https://github.com/n8n-io/localtunnel](https://github.com/n8n-io/localtunnel)
+n8n+ must be reachable from the internet to make use of webhooks - essential for triggering workflows from external web-based services such as GitHub. To make this easier, n8n has a special tunnel service which redirects requests from our servers to your local n8n+ instance. You can inspect the code running this service here: [https://github.com/n8n-io/localtunnel](https://github.com/n8n-io/localtunnel)
 
-To use it simply start n8n with `--tunnel`
+To use it simply start n8n+ with `--tunnel`
 
 ```bash
 docker volume create n8n_data
@@ -90,13 +105,13 @@ docker run -it --rm \
  --name n8n \
  -p 5678:5678 \
  -v n8n_data:/home/node/.n8n \
- docker.n8n.io/n8nio/n8n \
+ ghcr.io/n8n-plus/n8n-plus \
  start --tunnel
 ```
 
 ## Use with PostgreSQL
 
-By default, n8n uses SQLite to save credentials, past executions and workflows. However, n8n also supports using PostgreSQL.
+By default, n8n+ uses SQLite to save credentials, past executions and workflows. However, n8n+ also supports using PostgreSQL.
 
 > **WARNING**: Even when using a different database, it is still important to
 persist the `/home/node/.n8n` folder, which also contains essential n8n
@@ -118,7 +133,7 @@ docker run -it --rm \
  -e DB_POSTGRESDB_SCHEMA=<POSTGRES_SCHEMA> \
  -e DB_POSTGRESDB_PASSWORD=<POSTGRES_PASSWORD> \
  -v n8n_data:/home/node/.n8n \
- docker.n8n.io/n8nio/n8n
+ ghcr.io/n8n-plus/n8n-plus
 ```
 
 A full working setup with docker-compose can be found [here](https://github.com/n8n-io/n8n-hosting/blob/main/docker-compose/withPostgres/README.md).
@@ -144,26 +159,26 @@ Example server setups for a range of cloud providers and scenarios can be found 
 
 Before you upgrade to the latest version make sure to check here if there are any breaking changes which may affect you: [Breaking Changes](https://github.com/n8n-io/n8n/blob/master/packages/cli/BREAKING-CHANGES.md)
 
-From your Docker Desktop, navigate to the Images tab and select Pull from the context menu to download the latest n8n image.
+From your Docker Desktop, navigate to the Images tab and select Pull from the context menu to download the latest n8n+ image.
 
 You can also use the command line to pull the latest, or a specific version:
 
 ### Pull latest (stable) version
 
 ```bash
-docker pull docker.n8n.io/n8nio/n8n
+docker pull ghcr.io/n8n-plus/n8n-plus
 ```
 
 ### Pull specific version
 
 ```bash
-docker pull docker.n8n.io/n8nio/n8n:0.220.1
+docker pull ghcr.io/n8n-plus/n8n-plus:0.220.1
 ```
 
 ### Pull next (unstable) version
 
 ```bash
-docker pull docker.n8n.io/n8nio/n8n:next
+docker pull ghcr.io/n8n-plus/n8n-plus:next
 ```
 
 Stop the container and start it again:
@@ -189,12 +204,12 @@ docker rm [container_id]
 4. Start the new container:
 
 ```bash
-docker run --name=[container_name] [options] -d docker.n8n.io/n8nio/n8n
+docker run --name=[container_name] [options] -d ghcr.io/n8n-plus/n8n-plus
 ```
 
 ### Updating with Docker Compose
 
-If you run n8n using a Docker Compose file, follow these steps to update n8n:
+If you run n8n+ using a Docker Compose file, follow these steps to update n8n+:
 
 ```bash
 # Pull latest version
@@ -209,7 +224,7 @@ docker compose up -d
 
 ## Setting the timezone
 
-To specify the timezone n8n should use, the environment variable `GENERIC_TIMEZONE` can
+To specify the timezone n8n+ should use, the environment variable `GENERIC_TIMEZONE` can
 be set. One example where this variable has an effect is the Schedule node.
 
 The system's timezone can be set separately with the environment variable `TZ`.
@@ -223,7 +238,7 @@ docker run -it --rm \
  -p 5678:5678 \
  -e GENERIC_TIMEZONE="Europe/Berlin" \
  -e TZ="Europe/Berlin" \
- docker.n8n.io/n8nio/n8n
+ ghcr.io/n8n-plus/n8n-plus
 ```
 
 For more information on configuration and environment variables, please see the [n8n documentation](https://docs.n8n.io/hosting/configuration/environment-variables/).
@@ -231,10 +246,10 @@ For more information on configuration and environment variables, please see the 
 ## Build Docker-Image
 
 ```bash
-docker buildx build --platform linux/amd64,linux/arm64 --build-arg N8N_VERSION=<VERSION> -t n8n:<VERSION> .
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg N8N_VERSION=<VERSION> -t n8n-plus:<VERSION> .
 
 # For example:
-docker buildx build --platform linux/amd64,linux/arm64 --build-arg N8N_VERSION=1.30.1 -t n8n:1.30.1 .
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg N8N_VERSION=1.30.1 -t n8n-plus:1.30.1 .
 ```
 
 ## What does n8n mean and how do you pronounce it?
@@ -246,12 +261,5 @@ However, I did not like how long the name was and I could not imagine writing so
 
 ## Support
 
-If you need more help with n8n, you can ask for support in the [n8n community forum](https://community.n8n.io). This is the best source of answers, as both the n8n support team and community members can help.
-
-## Jobs
-
-If you are interested in working for n8n and so shape the future of the project check out our [job posts](https://jobs.ashbyhq.com/n8n).
-
-## License
-
-You can find the license information [here](https://github.com/n8n-io/n8n/blob/master/README.md#license).
+Need help? Our community forum is the place to get support and connect with other users:
+[community.n8n.io](https://community.n8n.io)

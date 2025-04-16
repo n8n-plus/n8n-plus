@@ -20,13 +20,9 @@ for (let { name, path, version, private: isPrivate } of packages) {
 		// Add these fields to all published package.json files to ensure provenance checks pass
 		license: 'SEE LICENSE IN LICENSE.md',
 		homepage: 'https://n8n.io',
-		author: {
-			name: 'Jan Oberhauser',
-			email: 'jan@n8n.io',
-		},
 		repository: {
 			type: 'git',
-			url: 'git+https://github.com/n8n-io/n8n.git',
+			url: 'git+https://github.com/n8n-plus/n8n-plus.git',
 		},
 	};
 
