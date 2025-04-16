@@ -8,7 +8,7 @@ on:
 jobs:
   install-and-build:
     name: Install & Build
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     env:
       NODE_OPTIONS: '--max-old-space-size=4096'
     steps:

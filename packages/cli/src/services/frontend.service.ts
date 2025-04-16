@@ -65,6 +65,22 @@ export class FrontendService {
 		const instanceBaseUrl = this.urlService.getInstanceBaseUrl();
 		const restEndpoint = this.globalConfig.endpoints.rest;
 
+		const telemetrySettings: ITelemetrySettings = {
+			enabled: this.globalConfig.diagnostics.enabled,
+		};
+
+		if (telemetrySettings.enabled) {
+			const conf = this.globalConfig.diagnostics.frontendConfig;
+			const [key, url] = conf.split(';');
+
+			if (!key || !url) {
+				this.logger.warn('Diagnostics frontend config is invalid');
+				telemetrySettings.enabled = false;
+			}
+
+			telemetrySettings.config = { key, url };
+		}
+
 		this.settings = {
 			inE2ETests,
 			isDocker: this.instanceSettings.isDocker,

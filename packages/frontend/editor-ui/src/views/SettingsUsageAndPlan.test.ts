@@ -3,8 +3,8 @@ import { createComponentRenderer } from '@/__tests__/render';
 import { mockedStore } from '@/__tests__/utils';
 import { useUsageStore } from '@/stores/usage.store';
 import SettingsUsageAndPlan from '@/views/SettingsUsageAndPlan.vue';
-import { useUIStore } from '@/stores/ui.store';
 import { useUsersStore } from '@/stores/users.store';
+import type { IUser } from '@/Interface';
 
 vi.mock('vue-router', () => {
 	return {
@@ -21,7 +21,6 @@ vi.mock('vue-router', () => {
 });
 
 let usageStore: ReturnType<typeof mockedStore<typeof useUsageStore>>;
-let uiStore: ReturnType<typeof mockedStore<typeof useUIStore>>;
 let usersStore: ReturnType<typeof mockedStore<typeof useUsersStore>>;
 
 const renderComponent = createComponentRenderer(SettingsUsageAndPlan);
@@ -30,7 +29,6 @@ describe('SettingsUsageAndPlan', () => {
 	beforeEach(() => {
 		createTestingPinia();
 		usageStore = mockedStore(useUsageStore);
-		uiStore = mockedStore(useUIStore);
 		usersStore = mockedStore(useUsersStore);
 
 		usageStore.viewPlansUrl = 'https://subscription.n8n.io';
@@ -53,16 +51,11 @@ describe('SettingsUsageAndPlan', () => {
 		usersStore.currentUser = {
 			globalScopes: ['community:register'],
 		} as IUser;
-		const { getByRole, container } = renderComponent();
+		const { getByRole, queryByRole, container } = renderComponent();
 		expect(getByRole('heading', { level: 3 })).toHaveTextContent('Community');
 		expect(container.querySelector('.n8n-badge')).toBeNull();
 
-		expect(getByRole('button', { name: 'Unlock' })).toBeVisible();
-
-		await userEvent.click(getByRole('button', { name: 'Unlock' }));
-		expect(uiStore.openModalWithData).toHaveBeenCalledWith(
-			expect.objectContaining({ name: COMMUNITY_PLUS_ENROLLMENT_MODAL }),
-		);
+		expect(queryByRole('button', { name: 'Unlock' })).not.toBeInTheDocument();
 	});
 
 	it('should show community registered badge', async () => {

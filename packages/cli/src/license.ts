@@ -6,6 +6,7 @@ import { InstanceSettings, Logger } from 'n8n-core';
 import config from '@/config';
 import { SettingsRepository } from '@/databases/repositories/settings.repository';
 import { OnShutdown } from '@/decorators/on-shutdown';
+import { LicenseManager } from '@/license-manager';
 import { LicenseMetricsService } from '@/metrics/license-metrics.service';
 
 import {
@@ -17,7 +18,6 @@ import {
 	UNLIMITED_LICENSE_QUOTA,
 } from './constants';
 import type { BooleanLicenseFeature, NumericLicenseFeature } from './interfaces';
-import { LicenseManager } from '@/license-manager';
 
 const LICENSE_RENEWAL_DISABLED_WARNING =
 	'Automatic license renewal is disabled. The license will not renew automatically, and access to licensed features may be lost!';
