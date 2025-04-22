@@ -179,7 +179,7 @@ export abstract class AbstractServer {
 
 		await this.setupHealthCheck();
 
-		this.logger.info(`n8n ready on ${address}, port ${port}`);
+		this.logger.info(`n8n+ ready on ${address}, port ${port}`);
 	}
 
 	async start(): Promise<void> {

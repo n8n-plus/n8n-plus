@@ -122,9 +122,11 @@ export class FrontendService {
 				infoUrl: this.globalConfig.versionNotifications.infoUrl,
 			},
 			instanceId: this.instanceSettings.instanceId,
-			telemetry: telemetrySettings,
+			telemetry: {
+				enabled: false,
+			},
 			posthog: {
-				enabled: this.globalConfig.diagnostics.enabled,
+				enabled: false,
 				apiHost: this.globalConfig.diagnostics.posthogConfig.apiHost,
 				apiKey: this.globalConfig.diagnostics.posthogConfig.apiKey,
 				autocapture: false,

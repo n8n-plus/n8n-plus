@@ -30,10 +30,6 @@ on:
         required: false
         default: false
         type: boolean
-    secrets:
-      CODECOV_TOKEN:
-        description: 'Codecov upload token.'
-        required: false
 
 jobs:
   unit-test:
@@ -43,12 +39,12 @@ jobs:
       TURBO_FORCE: ${{ inputs.ignoreTurboCache }}
       COVERAGE_ENABLED: ${{ inputs.collectCoverage }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           ref: ${{ inputs.ref }}
 
       - name: Use Node.js ${{ inputs.nodeVersion }}
-        uses: useblacksmith/setup-node@v5
+        uses: useblacksmith/setup-node@65c6ca86fdeb0ab3d85e78f57e4f6a7e4780b391 # v5
         with:
           node-version: ${{ inputs.nodeVersion }}
 
@@ -61,7 +57,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Setup build cache
-        uses: useblacksmith/caching-for-turbo@v1
+        uses: useblacksmith/caching-for-turbo@bafb57e7ebdbf1185762286ec94d24648cd3938a # v1
 
       - name: Build
         if: ${{ inputs.cacheKey == '' }}
@@ -84,15 +80,3 @@ jobs:
       - name: Test Frontend
         if: ${{ !inputs.skipFrontendTests }}
         run: pnpm test:frontend
-
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}  # Run even if tests fail
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload coverage to Codecov
-        if: inputs.collectCoverage
-        uses: codecov/codecov-action@v5.1.2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
