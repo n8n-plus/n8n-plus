@@ -1,5 +1,6 @@
 import type { FrontendSettings, ITelemetrySettings } from '@n8n/api-types';
 import { GlobalConfig, SecurityConfig } from '@n8n/config';
+import { LICENSE_FEATURES } from '@n8n/constants';
 import { Container, Service } from '@n8n/di';
 import { createWriteStream } from 'fs';
 import { mkdir } from 'fs/promises';
@@ -9,12 +10,13 @@ import type { ICredentialType, INodeTypeBaseDescription } from 'n8n-workflow';
 import path from 'path';
 
 import config from '@/config';
-import { inE2ETests, LICENSE_FEATURES, N8N_VERSION } from '@/constants';
+import { inE2ETests, N8N_VERSION } from '@/constants';
 import { CredentialTypes } from '@/credential-types';
 import { CredentialsOverwrites } from '@/credentials-overwrites';
 import { getLdapLoginLabel } from '@/ldap.ee/helpers.ee';
 import { License } from '@/license';
 import { LoadNodesAndCredentials } from '@/load-nodes-and-credentials';
+import { InsightsService } from '@/modules/insights/insights.service';
 import { ModulesConfig } from '@/modules/modules.config';
 import { isApiEnabled } from '@/public-api';
 import { PushConfig } from '@/push/push.config';
@@ -49,6 +51,7 @@ export class FrontendService {
 		private readonly modulesConfig: ModulesConfig,
 		private readonly pushConfig: PushConfig,
 		private readonly binaryDataConfig: BinaryDataConfig,
+		private readonly insightsService: InsightsService,
 	) {
 		loadNodesAndCredentials.addPostProcessor(async () => await this.generateTypes());
 		void this.generateTypes();
@@ -172,6 +175,7 @@ export class FrontendService {
 				host: this.globalConfig.templates.host,
 			},
 			executionMode: config.getEnv('executions.mode'),
+			isMultiMain: this.instanceSettings.isMultiMain,
 			pushBackend: this.pushConfig.backend,
 			communityNodesEnabled: this.globalConfig.nodes.communityPackages.enabled,
 			deployment: {
@@ -249,6 +253,10 @@ export class FrontendService {
 				enabled: this.modulesConfig.modules.includes('insights'),
 				summary: true,
 				dashboard: false,
+				dateRanges: [],
+			},
+			logsView: {
+				enabled: false,
 			},
 		};
 	}
@@ -374,6 +382,7 @@ export class FrontendService {
 			enabled: this.modulesConfig.loadedModules.has('insights'),
 			summary: this.license.isInsightsSummaryEnabled(),
 			dashboard: this.license.isInsightsDashboardEnabled(),
+			dateRanges: this.insightsService.getAvailableDateRanges(),
 		});
 
 		this.settings.mfa.enabled = config.get('mfa.enabled');
@@ -385,6 +394,8 @@ export class FrontendService {
 		this.settings.enterprise.projects.team.limit = this.license.getTeamProjectLimit();
 
 		this.settings.folders.enabled = this.license.isFoldersEnabled();
+
+		this.settings.logsView.enabled = config.get('logs_view.enabled');
 
 		return this.settings;
 	}
