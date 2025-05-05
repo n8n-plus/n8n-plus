@@ -1,3 +1,4 @@
+import { LICENSE_FEATURES, LICENSE_QUOTAS } from '@n8n/constants';
 import type {
 	TLicenseManagerConfig,
 	TLicenseCertObj,
@@ -8,8 +9,6 @@ import type {
 } from '@n8n_io/license-sdk';
 import { X509Certificate } from 'node:crypto';
 import { v4 } from 'uuid';
-
-import { LICENSE_FEATURES, LICENSE_QUOTAS } from '@/constants';
 
 const UNLIMITED_LICENSE_QUOTA = -1;
 
