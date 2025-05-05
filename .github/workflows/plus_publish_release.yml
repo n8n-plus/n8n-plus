@@ -1,0 +1,224 @@
+name: '[+] Publish, release & sync Plus'
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 'release/*'
+
+jobs:
+  publish-to-npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      NPM_CONFIG_PROVENANCE: true
+    outputs:
+      release: ${{ steps.set-release.outputs.release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4.2.0
+        with:
+          node-version: 20.x
+
+      - name: Setup corepack and pnpm
+        run: |
+          npm i -g corepack@0.31
+          corepack enable
+
+      - name: Update package.json Name and Description
+        run: |
+          node -e "const fs = require('fs'); \
+            const file = 'packages/cli/package.json'; \
+            const pkg = JSON.parse(fs.readFileSync(file, 'utf8')); \
+            pkg.name = '@n8n-plus/n8n-plus'; \
+            pkg.description = 'n8n Workflow Automation Tool (plus edition)'; \
+            fs.writeFileSync(file, JSON.stringify(pkg, null, 2));"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Set release version in env
+        run: echo "RELEASE=$(node -e 'console.log(require("./package.json").version)')" >> $GITHUB_ENV
+
+      - name: Build
+        run: pnpm build
+
+      - name: Cache build artifacts
+        uses: actions/cache/save@v4.2.0
+        with:
+          path: ./packages/**/dist
+          key: ${{ github.sha }}-release:build
+
+      - name: Dry-run publishing
+        run: pnpm publish --filter n8n-plus --no-git-checks --dry-run
+
+      - name: Pre publishing changes
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          node .github/scripts/trim-fe-packageJson.js
+          node .github/scripts/ensure-provenance-fields.mjs
+          cp README.md packages/cli/README.md
+          sed -i "s/default: 'dev'/default: 'stable'/g" packages/cli/dist/config/schema.js
+
+      - name: Publish to NPM
+        run: pnpm publish --filter n8n-plus --publish-branch ${{ github.event.pull_request.base.ref }} --access public --tag rc --no-git-checks
+
+      - name: Update npm tags
+        run: |
+          npm dist-tag rm @n8n-plus/n8n-plus@${{ env.RELEASE }} rc
+          npm dist-tag add @n8n-plus/n8n-plus@${{ env.RELEASE }} stable
+          npm dist-tag add @n8n-plus/n8n-plus@${{ env.RELEASE }} latest
+        continue-on-error: true
+
+      - id: set-release
+        run: echo "release=${{ env.RELEASE }}" >> $GITHUB_OUTPUT
+
+  publish-to-docker-hub:
+    name: Publish to DockerHub
+    needs: [publish-to-npm]
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a # v3.3.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc # v6.11.0
+        env:
+          DOCKER_BUILD_SUMMARY: false
+        with:
+          context: .
+          file: ./docker/images/n8n-custom/Dockerfile
+          build-args: |
+            N8N_VERSION=${{ needs.publish-to-npm.outputs.release }}
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/n8n-plus:${{ needs.publish-to-npm.outputs.release }}
+            ${{ secrets.DOCKER_USERNAME }}/n8n-plus:latest
+            ghcr.io/${{ github.repository_owner }}/n8n-plus:${{ needs.publish-to-npm.outputs.release }}
+            ghcr.io/${{ github.repository_owner }}/n8n-plus:latest
+
+
+  create-release:
+    name: Create Release
+    needs: [publish-to-npm, publish-to-docker-hub]
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create a Release in the Fork
+        uses: actions/create-release@v1
+        with:
+          tag_name: "n8n-plus@${{ needs.publish-to-npm.outputs.release }}"
+          release_name: "n8n-plus@${{ needs.publish-to-npm.outputs.release }}"
+          body: ${{ github.event.pull_request.body }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-plus:
+    name: Sync Plus
+    needs: [publish-to-npm, create-release]
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check if PR to merge into plus exists
+        id: check-pr
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const branchTag = process.env.BRANCH_TAG;
+            const { owner, repo } = context.repo;
+            // List open PRs from branchTag to base "plus"
+            const { data: pulls } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'open',
+              base: 'plus',
+              head: `${owner}:${branchTag}`,
+            });
+            core.setOutput("prExists", pulls.length > 0 ? "true" : "false");
+        env:
+          BRANCH_TAG: ${{ github.event.pull_request.base.ref }}
+
+      - name: Exit if PR already exists
+        if: ${{ steps.check-pr.outputs.prExists == 'true' }}
+        run: |
+          echo "A PR merging release/${{ needs.publish-to-npm.outputs.release }} into plus already exists. Exiting."
+          exit 0
+
+      - name: Create PR merging pull request branch into plus
+        if: ${{ steps.check-pr.outputs.prExists == 'false' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            try {
+              const prBody = process.env.PR_BODY || '';
+              const branchTag = process.env.BRANCH_TAG;
+              const version = process.env.VERSION;
+
+              const result = await github.rest.pulls.create({
+                owner,
+                repo,
+                title: `chore: ⤵️ Merge release ${version}`,
+                body: prBody,
+                head: branchTag,  // Source branch is the pull request branch
+                base: 'plus'      // Target branch is "plus"
+              });
+              console.log(`Pull request created: ${result.data.html_url}`);
+            } catch (error) {
+              console.error('Failed to create pull request:', error);
+              core.setFailed(`Failed to create pull request: ${error.message}`);
+            }
+        env:
+          VERSION: ${{ needs.publish-to-npm.outputs.release }}
+          BRANCH_TAG: ${{ github.event.pull_request.base.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+

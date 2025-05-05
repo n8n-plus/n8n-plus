@@ -9,7 +9,7 @@ import {
 import { OnShutdown } from '@n8n/decorators';
 import { Container, Service } from '@n8n/di';
 import type { TEntitlement, TFeatures, TLicenseBlock } from '@n8n_io/license-sdk';
-import { LicenseManager } from '@n8n_io/license-sdk';
+import { LicenseManager } from '@/license-manager';
 import { InstanceSettings, Logger } from 'n8n-core';
 
 import config from '@/config';
