@@ -9,6 +9,7 @@ import {
 	isTool,
 	rewireGraph,
 } from 'n8n-core';
+import { MANUAL_TRIGGER_NODE_TYPE } from 'n8n-workflow';
 import type {
 	IPinData,
 	IRun,
@@ -39,7 +40,15 @@ export class ManualExecutionService {
 			startNode = workflow.getNode(data.startNodes[0].name) ?? undefined;
 		}
 
-		return startNode;
+		if (startNode) {
+			return startNode;
+		}
+
+		const manualTrigger = workflow
+			.getTriggerNodes()
+			.find((node) => node.type === MANUAL_TRIGGER_NODE_TYPE);
+
+		return manualTrigger;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -118,9 +127,16 @@ export class ManualExecutionService {
 
 				// Rewire graph to be able to execute the destination tool node
 				if (isTool(destinationNode, workflow.nodeTypes)) {
-					workflow = rewireGraph(destinationNode, DirectedGraph.fromWorkflow(workflow)).toWorkflow({
+					const graph = rewireGraph(
+						destinationNode,
+						DirectedGraph.fromWorkflow(workflow),
+						data.agentRequest,
+					);
+
+					workflow = graph.toWorkflow({
 						...workflow,
 					});
+					data.destinationNode = graph.getDirectChildConnections(destinationNode).at(0)?.to?.name;
 				}
 			}
 
@@ -141,6 +157,7 @@ export class ManualExecutionService {
 					data.pinData,
 					data.dirtyNodeNames,
 					data.destinationNode,
+					data.agentRequest,
 				);
 			} else {
 				return workflowExecute.runPartialWorkflow(
