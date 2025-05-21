@@ -1,7 +1,7 @@
+import type { SharedCredentialsRepository } from '@n8n/db';
 import { mock } from 'jest-mock-extended';
 
 import { createRawProjectData } from '@/__tests__/project.test-data';
-import type { SharedCredentialsRepository } from '@/databases/repositories/shared-credentials.repository';
 import type { EventService } from '@/events/event.service';
 import type { AuthenticatedRequest } from '@/requests';
 
@@ -50,6 +50,7 @@ describe('CredentialsController', () => {
 				id: newCredentialsPayload.projectId,
 			});
 
+			// @ts-ignore
 			credentialsService.createUnmanagedCredential.mockResolvedValue(createdCredentials);
 
 			sharedCredentialsRepository.findCredentialOwningProject.mockResolvedValue(

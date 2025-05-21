@@ -40,6 +40,8 @@ import {
 	DELETE_FOLDER_MODAL_KEY,
 	MOVE_FOLDER_MODAL_KEY,
 	WORKFLOW_ACTIVATION_CONFLICTING_WEBHOOK_MODAL_KEY,
+	FROM_AI_PARAMETERS_MODAL_KEY,
+	IMPORT_WORKFLOW_URL_MODAL_KEY,
 } from '@/constants';
 import type {
 	INodeUi,
@@ -125,6 +127,7 @@ export const useUIStore = defineStore(STORES.UI, () => {
 				SETUP_CREDENTIALS_MODAL_KEY,
 				PROJECT_MOVE_RESOURCE_MODAL,
 				NEW_ASSISTANT_SESSION_MODAL,
+				IMPORT_WORKFLOW_URL_MODAL_KEY,
 			].map((modalKey) => [modalKey, { open: false }]),
 		),
 		[DELETE_USER_MODAL_KEY]: {
@@ -190,6 +193,18 @@ export const useUIStore = defineStore(STORES.UI, () => {
 				workflowId: '',
 				webhookPath: '',
 				node: '',
+			},
+		},
+		[FROM_AI_PARAMETERS_MODAL_KEY]: {
+			open: false,
+			data: {
+				nodeName: undefined,
+			},
+		},
+		[IMPORT_WORKFLOW_URL_MODAL_KEY]: {
+			open: false,
+			data: {
+				url: '',
 			},
 		},
 	});

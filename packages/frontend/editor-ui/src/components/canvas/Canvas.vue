@@ -4,7 +4,8 @@ import type { CanvasLayoutEvent, CanvasLayoutSource } from '@/composables/useCan
 import { useCanvasLayout } from '@/composables/useCanvasLayout';
 import { useCanvasNodeHover } from '@/composables/useCanvasNodeHover';
 import { useCanvasTraversal } from '@/composables/useCanvasTraversal';
-import { type ContextMenuAction, useContextMenu } from '@/composables/useContextMenu';
+import type { ContextMenuAction, ContextMenuTarget } from '@/composables/useContextMenu';
+import { useContextMenu } from '@/composables/useContextMenu';
 import { useKeybindings } from '@/composables/useKeybindings';
 import type { PinDataSource } from '@/composables/usePinnedData';
 import { CanvasKey } from '@/constants';
@@ -58,7 +59,7 @@ const emit = defineEmits<{
 	'update:modelValue': [elements: CanvasNode[]];
 	'update:node:position': [id: string, position: XYPosition];
 	'update:nodes:position': [events: CanvasNodeMoveEvent[]];
-	'update:node:activated': [id: string];
+	'update:node:activated': [id: string, event?: MouseEvent];
 	'update:node:deactivated': [id: string];
 	'update:node:enabled': [id: string];
 	'update:node:selected': [id?: string];
@@ -94,6 +95,7 @@ const emit = defineEmits<{
 	'create:workflow': [];
 	'drag-and-drop': [position: XYPosition, event: DragEvent];
 	'tidy-up': [CanvasLayoutEvent];
+	'open:sub-workflow': [nodeId: string];
 }>();
 
 const props = withDefaults(
@@ -265,6 +267,7 @@ function selectUpstreamNodes(id: string) {
 
 const keyMap = computed(() => {
 	const readOnlyKeymap = {
+		ctrl_shift_o: emitWithLastSelectedNode((id) => emit('open:sub-workflow', id)),
 		ctrl_c: emitWithSelectedNodes((ids) => emit('copy:nodes', ids)),
 		enter: emitWithLastSelectedNode((id) => onSetNodeActivated(id)),
 		ctrl_a: () => addSelectedNodes(graphNodes.value),
@@ -367,9 +370,9 @@ function onSelectionEnd() {
 	}
 }
 
-function onSetNodeActivated(id: string) {
+function onSetNodeActivated(id: string, event?: MouseEvent) {
 	props.eventBus.emit('nodes:action', { ids: [id], action: 'update:node:activated' });
-	emit('update:node:activated', id);
+	emit('update:node:activated', id, event);
 }
 
 function onSetNodeDeactivated(id: string) {
@@ -603,18 +606,16 @@ const nodeDataById = computed(() => {
 
 const contextMenu = useContextMenu();
 
-function onOpenContextMenu(event: MouseEvent) {
+function onOpenContextMenu(event: MouseEvent, target?: Pick<ContextMenuTarget, 'nodeId'>) {
 	contextMenu.open(event, {
 		source: 'canvas',
 		nodeIds: selectedNodeIds.value,
+		...target,
 	});
 }
 
 function onOpenSelectionContextMenu({ event }: { event: MouseEvent }) {
-	contextMenu.open(event, {
-		source: 'canvas',
-		nodeIds: selectedNodeIds.value,
-	});
+	onOpenContextMenu(event);
 }
 
 function onOpenNodeContextMenu(
@@ -622,11 +623,14 @@ function onOpenNodeContextMenu(
 	event: MouseEvent,
 	source: 'node-button' | 'node-right-click',
 ) {
-	if (selectedNodeIds.value.includes(id)) {
-		onOpenContextMenu(event);
+	if (source === 'node-button') {
+		contextMenu.open(event, { source, nodeId: id });
+	} else if (selectedNodeIds.value.length > 1 && selectedNodeIds.value.includes(id)) {
+		onOpenContextMenu(event, { nodeId: id });
+	} else {
+		onSelectNodes({ ids: [id] });
+		contextMenu.open(event, { source, nodeId: id });
 	}
-
-	contextMenu.open(event, { source, nodeId: id });
 }
 
 async function onContextMenuAction(action: ContextMenuAction, nodeIds: string[]) {
@@ -659,6 +663,9 @@ async function onContextMenuAction(action: ContextMenuAction, nodeIds: string[])
 			return props.eventBus.emit('nodes:action', { ids: nodeIds, action: 'update:sticky:color' });
 		case 'tidy_up':
 			return await onTidyUp({ source: 'context-menu' });
+		case 'open_sub_workflow': {
+			return emit('open:sub-workflow', nodeIds[0]);
+		}
 	}
 }
 

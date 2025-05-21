@@ -704,6 +704,16 @@ export type DeduplicationScope = 'node' | 'workflow';
 export type DeduplicationItemTypes = string | number;
 export type DeduplicationMode = 'entries' | 'latestIncrementalKey' | 'latestDate';
 
+export interface IProcessedDataLatest {
+	mode: DeduplicationMode;
+	data: DeduplicationItemTypes;
+}
+
+export interface IProcessedDataEntries {
+	mode: DeduplicationMode;
+	data: DeduplicationItemTypes[];
+}
+
 export interface IDeduplicationOutput {
 	new: DeduplicationItemTypes[];
 	processed: DeduplicationItemTypes[];
@@ -1482,6 +1492,7 @@ export interface INodePropertyOptions {
 	description?: string;
 	routing?: INodePropertyRouting;
 	outputConnectionType?: NodeConnectionType;
+	inputSchema?: any;
 }
 
 export interface INodeListSearchItems extends INodePropertyOptions {
@@ -2252,6 +2263,7 @@ export interface IWorkflowBase {
 	id: string;
 	name: string;
 	active: boolean;
+	isArchived: boolean;
 	createdAt: Date;
 	startedAt?: Date;
 	updatedAt: Date;
@@ -2298,6 +2310,7 @@ export interface IWorkflowExecutionDataProcess {
 		name: string;
 		data?: ITaskData;
 	};
+	agentRequest?: AiAgentRequest;
 }
 
 export interface ExecuteWorkflowOptions {
@@ -2336,6 +2349,14 @@ type AiEventPayload = {
 	workflowId?: string;
 	nodeType?: string;
 };
+
+// Used to transport an agent request for partial execution
+export interface AiAgentRequest {
+	query: string | INodeParameters;
+	tool: {
+		name: string;
+	};
+}
 
 export interface IWorkflowExecuteAdditionalData {
 	credentialsHelper: ICredentialsHelper;
@@ -2436,11 +2457,14 @@ export interface WorkflowTestData {
 		};
 	};
 	output: {
+		assertBinaryData?: boolean;
 		nodeExecutionOrder?: string[];
+		nodeExecutionStack?: IExecuteData[];
 		testAllOutputs?: boolean;
 		nodeData: {
 			[key: string]: any[][];
 		};
+		error?: string;
 	};
 	nock?: {
 		baseUrl: string;
