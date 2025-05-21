@@ -3,6 +3,17 @@ ARG NODE_VERSION=20
 # 1. Create an image to build n8n
 FROM --platform=linux/amd64 n8nio/base:${NODE_VERSION} AS builder
 
+ARG N8N_VERSION
+RUN if [ -z "$N8N_VERSION" ] ; then echo "The N8N_VERSION argument is missing!" ; exit 1; fi
+
+LABEL org.opencontainers.image.title="n8n+"
+LABEL org.opencontainers.image.description="Workflow Automation Tool (plus edition)"
+LABEL org.opencontainers.image.source="https://github.com/n8n-plus/n8n-plus"
+LABEL org.opencontainers.image.url="https://n8n.io"
+LABEL org.opencontainers.image.version=${N8N_VERSION}
+
+ENV N8N_VERSION=${N8N_VERSION}
+
 # Build the application from source
 WORKDIR /src
 COPY . /src
@@ -24,7 +35,7 @@ RUN NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional
 FROM n8nio/base:${NODE_VERSION}
 ENV NODE_ENV=production
 
-ARG N8N_RELEASE_TYPE=dev
+ARG N8N_RELEASE_TYPE=stable
 ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
 
 WORKDIR /home/node
